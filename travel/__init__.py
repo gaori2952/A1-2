@@ -1,0 +1,1 @@
+"""Domestic travel recommendation CLI."""
