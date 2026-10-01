@@ -80,6 +80,28 @@ class PipelineTests(unittest.TestCase):
         weather = report.split("## 날씨 요약\n", 1)[1].split("\n## ", 1)[0]
         self.assertIn("선선", weather)
 
+    def test_finalizer_preserves_bold_schedule_without_duplicates_and_renders_kakao_link(self):
+        restaurants = [{
+            "name": "식당",
+            "address": "경주 주소",
+            "category": "음식점",
+            "url": "http://place.map.kakao.com/123",
+        }]
+        report = finalize_report(
+            "## 1일 일정 제안\n## 1일 일정 제안\n"
+            "*   **오전:** 산책\n*   **오후:** 관람\n*   **저녁:** 식사",
+            "2026-10-15",
+            "2026-10-01T12:00:00+09:00",
+            RECOMMENDATION,
+            restaurants,
+            [],
+        )
+        self.assertEqual(report.count("## 1일 일정 제안"), 1)
+        self.assertEqual(report.count("**오전:**"), 1)
+        self.assertEqual(report.count("**오후:**"), 1)
+        self.assertEqual(report.count("**저녁:**"), 1)
+        self.assertIn("http://place.map.kakao.com/123", report)
+
 
 if __name__ == "__main__":
     unittest.main()

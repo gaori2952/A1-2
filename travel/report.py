@@ -34,7 +34,7 @@ def render_restaurants(restaurants: list[dict[str, Any]]) -> str:
             line += f"  \n  분류: {category}"
         url = place.get("url", "")
         parsed = urlparse(url) if isinstance(url, str) else None
-        if parsed and parsed.scheme == "https" and parsed.hostname == "place.map.kakao.com":
+        if parsed and parsed.scheme in {"http", "https"} and parsed.hostname == "place.map.kakao.com":
             line += f"  \n  링크: [지도에서 보기]({url})"
         lines.append(line)
     return "\n".join(lines)
@@ -65,6 +65,21 @@ def _replace_section(text: str, title: str, content: str) -> str:
     return text.rstrip() + f"\n\n{replacement.rstrip()}"
 
 
+def _deduplicate_adjacent_headings(text: str) -> str:
+    lines: list[str] = []
+    last_heading = ""
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("## "):
+            if stripped == last_heading:
+                continue
+            last_heading = stripped
+        elif stripped:
+            last_heading = ""
+        lines.append(line)
+    return "\n".join(lines)
+
+
 def finalize_report(
     raw: str,
     travel_date: str,
@@ -77,6 +92,7 @@ def finalize_report(
     if not text.startswith("# 국내 여행 추천 리포트"):
         text = f"# 국내 여행 추천 리포트\n- 여행 날짜: {travel_date}\n- 생성 시각: {generated_at}\n\n{text}"
 
+    text = _deduplicate_adjacent_headings(text)
     for title in REQUIRED_SECTIONS:
         section = re.search(rf"(?ms)^## {re.escape(title)}\s*$.*?(?=^## |\Z)", text)
         if section is None:
@@ -84,6 +100,7 @@ def finalize_report(
         elif not section.group(0).split("\n", 1)[1].strip():
             text = _replace_section(text, title, _fallback_section(title, recommendation, restaurants))
 
+    text = _deduplicate_adjacent_headings(text)
     text = _replace_section(text, "맛집 리스트", render_restaurants(restaurants))
     schedule_pattern = re.compile(r"(?ms)^## 1일 일정 제안\s*$.*?(?=^## |\Z)")
     schedule_match = schedule_pattern.search(text)
@@ -95,7 +112,7 @@ def finalize_report(
                 ("오후", "- 오후: 실내 명소와 주변 거리를 여유롭게 방문합니다."),
                 ("저녁", "- 저녁: 지역 식사 장소를 찾아 하루를 마무리합니다."),
             )
-            if not re.search(rf"(?m)^[-*]?\s*{label}\s*[:：]", schedule)
+            if not re.search(rf"(?im)^\s*(?:[-*+]\s*)?(?:\*\*|__)?{label}(?:\*\*|__)?\s*[:：]", schedule)
         ]
         if additions:
             text = _replace_section(text, "1일 일정 제안", schedule.rstrip() + "\n" + "\n".join(additions))
