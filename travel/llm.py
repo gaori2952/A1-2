@@ -1,4 +1,5 @@
 import requests
+from travel.api_trace import exchange
 
 from travel.config import Settings
 from travel.errors import TravelError, validation_error
@@ -22,8 +23,11 @@ def generate_text(prompt: str, settings: Settings, *, json_schema: dict[str, obj
             "responseSchema": json_schema,
         }
     try:
-        response = requests.post(
+        response = exchange(
+            requests.post,
             url,
+            provider="gemini", stage=("recommendation" if json_schema else "report"),
+            secrets=(settings.gemini_api_key, settings.kakao_rest_api_key),
             headers={"x-goog-api-key": settings.gemini_api_key},
             json=body,
             timeout=(5, 60),

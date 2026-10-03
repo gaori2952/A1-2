@@ -1,0 +1,121 @@
+{
+  "schema_version": "1.1",
+  "travel_date": "2026-10-15",
+  "executed_at": "2026-10-03T11:40:38+09:00",
+  "providers": {
+    "llm": "gemini",
+    "places": "kakao"
+  },
+  "recommendation": null,
+  "restaurants": [],
+  "search_status": "empty",
+  "report_status": "fallback",
+  "errors": [
+    {
+      "stage": "llm",
+      "code": "HTTP_429",
+      "message": "Gemini API 사용 한도에 도달했습니다.",
+      "attempt": 2,
+      "recovered": false
+    }
+  ],
+  "api_calls": [
+    {
+      "sequence": 1,
+      "provider": "gemini",
+      "stage": "recommendation",
+      "requested_at": "2026-10-03T02:40:38.596438+00:00",
+      "request": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent",
+        "json": {
+          "contents": [
+            {
+              "parts": [
+                {
+                  "text": "당신은 국내 여행 계획 도우미입니다.\n여행 날짜: 2026-10-15\n해당 시기에 여행하기 좋은 국내 지역을 1곳 추천하세요.\nrecommended_city, weather, events, reason 네 키만 가진 JSON 객체를 출력하세요.\nweather는 일반적인 계절 날씨 요약이며 실제 예보가 아닙니다.\nevents는 행사 후보 1~3개이며 미확인 행사는 해당 연도 일정 확인이 필요하다고 표시하세요.\nreason은 추천 근거를 설명하는 2~4문장입니다.\nJSON 외 설명이나 Markdown 코드 블록은 출력하지 마세요."
+                }
+              ]
+            }
+          ],
+          "generationConfig": {
+            "temperature": 0.3,
+            "responseMimeType": "application/json",
+            "responseSchema": {
+              "type": "OBJECT",
+              "properties": {
+                "recommended_city": {
+                  "type": "STRING"
+                },
+                "weather": {
+                  "type": "STRING"
+                },
+                "events": {
+                  "type": "ARRAY",
+                  "items": {
+                    "type": "STRING"
+                  }
+                },
+                "reason": {
+                  "type": "STRING"
+                }
+              },
+              "required": [
+                "recommended_city",
+                "weather",
+                "events",
+                "reason"
+              ],
+              "propertyOrdering": [
+                "recommended_city",
+                "weather",
+                "events",
+                "reason"
+              ]
+            }
+          }
+        }
+      },
+      "response": {
+        "status_code": 429,
+        "body": {
+          "error": {
+            "code": 429,
+            "message": "You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-3.8-flash\nPlease retry in 21h19m20.82900748s.",
+            "status": "RESOURCE_EXHAUSTED",
+            "details": [
+              {
+                "@type": "type.googleapis.com/google.rpc.Help",
+                "links": [
+                  {
+                    "description": "Learn more about Gemini API quotas",
+                    "url": "https://ai.google.dev/gemini-api/docs/rate-limits"
+                  }
+                ]
+              },
+              {
+                "@type": "type.googleapis.com/google.rpc.QuotaFailure",
+                "violations": [
+                  {
+                    "quotaMetric": "generativelanguage.googleapis.com/generate_content_free_tier_requests",
+                    "quotaId": "GenerateRequestsPerDayPerProjectPerModel-FreeTier",
+                    "quotaDimensions": {
+                      "location": "global",
+                      "model": "gemini-3.8-flash"
+                    },
+                    "quotaValue": "20"
+                  }
+                ]
+              },
+              {
+                "@type": "type.googleapis.com/google.rpc.RetryInfo",
+                "retryDelay": "76760s"
+              }
+            ]
+          }
+        }
+      },
+      "duration_ms": 605.17
+    }
+  ]
+}

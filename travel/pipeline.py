@@ -1,5 +1,6 @@
 from typing import Any
 
+from travel.api_trace import TRACE
 from travel.config import Settings
 from travel.errors import TravelError
 from travel.llm import generate_text, request_recommendation
@@ -9,6 +10,15 @@ from travel.storage import current_timestamp, save_results
 
 
 def run_pipeline(travel_date: str, settings: Settings) -> int:
+    api_calls = []
+    token = TRACE.set(api_calls)
+    try:
+        return _run_pipeline(travel_date, settings, api_calls)
+    finally:
+        TRACE.reset(token)
+
+
+def _run_pipeline(travel_date: str, settings: Settings, api_calls: list) -> int:
     errors: list[dict[str, object]] = []
     recommendation: dict[str, Any] | None = None
     restaurants: list[dict[str, object]] = []
@@ -54,7 +64,7 @@ def run_pipeline(travel_date: str, settings: Settings) -> int:
         report = build_fallback_report(travel_date, timestamp, None, restaurants, errors)
 
     result = {
-        "schema_version": "1.0",
+        "schema_version": "1.1",
         "travel_date": travel_date,
         "executed_at": timestamp,
         "providers": {"llm": "gemini", "places": "kakao"},
@@ -63,6 +73,7 @@ def run_pipeline(travel_date: str, settings: Settings) -> int:
         "search_status": search_status,
         "report_status": report_status,
         "errors": errors,
+        "api_calls": api_calls,
     }
     print("[5/5] 결과 저장 중")
     try:

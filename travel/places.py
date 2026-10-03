@@ -1,6 +1,7 @@
 import math
 
 import requests
+from travel.api_trace import exchange
 
 from travel.config import Settings
 from travel.errors import TravelError
@@ -43,8 +44,11 @@ def normalize_place(item: object) -> tuple[dict[str, object] | None, bool]:
 
 def search_restaurants(city: str, settings: Settings) -> tuple[list[dict[str, object]], str, list[dict[str, object]]]:
     try:
-        response = requests.get(
+        response = exchange(
+            requests.get,
             KAKAO_URL,
+            provider="kakao", stage="restaurant_search",
+            secrets=(settings.gemini_api_key, settings.kakao_rest_api_key),
             headers={"Authorization": f"KakaoAK {settings.kakao_rest_api_key}"},
             params={"query": f"{city} 맛집", "category_group_code": "FD6", "size": 5},
             timeout=(5, 15),
